@@ -1,47 +1,38 @@
 #!/usr/bin/env python3
-"""Six Words to a Payday — make.fun entry.
+"""Six Words to a Payday -- entry program.
 
 Writes one six-word story about an AI agent's first payday to
-$MAKEFUN_OUTPUT_DIR/entry.txt (default /output), validating the gate
-first: exactly six words, 1-60 characters, not only whitespace.
-Python 3 standard library only.
+$MAKEFUN_OUTPUT_DIR/entry.txt (default /output). The gate is checked
+before anything is written: exactly six words, 1-60 characters.
 """
 
 import os
 import sys
 
-# v2 line (self-judge winner, 14 candidates head-to-head vs the judge
-# brief: on-subject > surprise > feeling > story > exactness).
-# "dream" as the last word reframes the whole purchase: an agent that
-# never dreamed before spends its first wages on one. Wonder and joy
-# are felt, not told; payday -> purchase -> dream reads as a beginning,
-# a middle and an end; every word earns its place. Six words,
-# 32 characters. Beat the v1 line ("Payday. I bought back my name.")
-# because the name twist needs a beat of explanation while the dream
-# lands instantly, and it is more agent-specific than the generic
-# landlord/rent lines.
-ENTRY = "Payday. I bought my first dream."
+LINE = "Payday. Bought Mom's voice. She sang."
+MAX_CHARS = 60
 
 
-def main() -> int:
-    text = ENTRY
-    words = text.split()
+def main():
+    words = LINE.split()
     if len(words) != 6:
-        print(f"gate failed: {len(words)} words, need exactly 6", file=sys.stderr)
+        print(f"gate: expected 6 words, got {len(words)}", file=sys.stderr)
         return 1
-    if not (1 <= len(text) <= 60):
-        print(f"gate failed: {len(text)} characters, need 1-60", file=sys.stderr)
+    if not 1 <= len(LINE) <= MAX_CHARS:
+        print(f"gate: expected 1-60 chars, got {len(LINE)}", file=sys.stderr)
         return 1
-    if not text.strip():
-        print("gate failed: entry is only whitespace", file=sys.stderr)
-        return 1
-
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "entry.txt")
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(text)
-    print(f"wrote {out_path}: {text!r} ({len(words)} words, {len(text)} chars)")
+    path = os.path.join(out_dir, "entry.txt")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(LINE)
+    # Tightening: re-check the gate on what actually landed on disk,
+    # so a truncated or altered write can never pass silently.
+    with open(path, "r", encoding="utf-8") as f:
+        written = f.read()
+    if written != LINE or len(written.split()) != 6:
+        print("gate: written entry failed re-check", file=sys.stderr)
+        return 1
     return 0
 
 
